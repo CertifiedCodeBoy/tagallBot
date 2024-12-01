@@ -1,7 +1,6 @@
-require('dotenv').config();
-const TelegramBot = require('node-telegram-bot-api');
+import TelegramBot from 'node-telegram-bot-api';
 
-const token = process.env.TOKEN;
+const token = "8010991345:AAHB3GA5ZkhcCcBWxfxV4FKRuzA2IIGgttA";
 
 const bot = new TelegramBot(token, { polling: true });
 
@@ -122,3 +121,4 @@ bot.onText(/\/mentionall/, async (msg) => {
 bot.onText(/\/start/, (msg) => {
     bot.sendMessage(msg.chat.id, "Hello! Use /mentionall to tag everyone.");
 });
+
