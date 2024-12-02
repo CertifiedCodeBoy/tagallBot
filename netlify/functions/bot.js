@@ -12,7 +12,7 @@ dotenv.config();
 const bot = new TelegramBot(process.env.TOKEN);
 
 export default async function handler(req, res) {
-  // Verify this is a POST request from Telegram
+  // Verify this is a POST request from Telegra
   if (req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
   }
