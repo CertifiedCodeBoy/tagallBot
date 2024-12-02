@@ -89,26 +89,70 @@ export default async function handler(req, res) {
       }
 
       if (text === '/mentionall') {
-        try {
-          const mentions = [];
-          for (const userId of groupMembers) {
-            try {
-              const member = await bot.getChatMember(chatId, userId);
-              const user = member.user;
-              mentions.push(user.username
-                ? `@${user.username}`
-                : `[${user.first_name}](tg://user?id=${user.id})`);
-            } catch (error) {
-              console.error(`Failed to get member info for user ID ${userId}: ${error.message}`);
-            }
-          }
+  try {
+    // Convert Set to Array to ensure consistency
+    const memberArray = Array.from(groupMembers);
+    
+    // Limit mentions to prevent spam
+    if (memberArray.length > 50) {
+      await bot.sendMessage(chatId, 'Too many members to mention!');
+      return;
+    }
 
-          await bot.sendMessage(chatId, mentions.join(' '), { parse_mode: 'Markdown' });
-        } catch (error) {
-          console.error(error.message);
+    const mentions = [];
+    for (const userId of memberArray) {
+      try {
+        // Use safe error handling
+        const member = await bot.getChatMember(chatId, userId).catch(() => null);
+        
+        if (!member || !member.user) continue;
+        
+        const user = member.user;
+        mentions.push(user.username
+          ? `@${user.username}`
+          : `[${user.first_name}](tg://user?id=${user.id})`);
+      } catch (error) {
+        console.error(`Mention error for user ${userId}:`, error);
+      }
+    }
+
+    // Ensure mentions are not empty
+    if (mentions.length === 0) {
+      await bot.sendMessage(chatId, 'No members could be mentioned.');
+      return;
+    }
+
+    // Split mentions if too long
+    if (mentions.join(' ').length > 4096) {
+      const chunks = [];
+      let currentChunk = [];
+      let currentLength = 0;
+
+      for (const mention of mentions) {
+        if (currentLength + mention.length > 4096) {
+          chunks.push(currentChunk.join(' '));
+          currentChunk = [];
+          currentLength = 0;
         }
+        currentChunk.push(mention);
+        currentLength += mention.length;
       }
 
+      if (currentChunk.length > 0) {
+        chunks.push(currentChunk.join(' '));
+      }
+
+      for (const chunk of chunks) {
+        await bot.sendMessage(chatId, chunk, { parse_mode: 'Markdown' });
+      }
+    } else {
+      await bot.sendMessage(chatId, mentions.join(' '), { parse_mode: 'Markdown' });
+    }
+  } catch (error) {
+    console.error('Mentioning all error:', error);
+    await bot.sendMessage(chatId, 'Failed to mention all members.');
+  }
+}
       if (text === '/start') {
         await bot.sendMessage(chatId, "Hello! Use /mentionall to tag everyone.");
       }
