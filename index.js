@@ -122,6 +122,6 @@ bot.onText(/\/mentionall/, async (msg) => {
 });
 
 bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, "Hello! Use /mentionall to tag everyone.");
+    bot.sendMessage(msg.chat.id, "Hello! Use /join to join a group.");
 });
 
